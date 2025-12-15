@@ -17,14 +17,14 @@
             margin: 0; padding: 0;
             background: radial-gradient(circle at center, #0a0a0a 0%, #000000 100%);
             height: 100vh;
-            overflow: hidden;
+            /* Quitamos el overflow hidden global para manejarlo por pantalla */
             font-family: 'Montserrat', sans-serif;
             color: white;
         }
 
-        /* Lienzo para confeti (siempre visible de fondo) */
         #confetti-canvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; /* Fixed para que se quede quieto si se hace scroll */
+            top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 1;
         }
 
@@ -33,153 +33,74 @@
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
             transition: opacity 1s ease, transform 1s ease;
             z-index: 10;
         }
 
-        /* Pantalla 2 (Carta) oculta al inicio */
+        /* PANTALLA 1: Centrada y sin scroll */
+        #screen1 {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Evita scroll en la portada */
+        }
+
+        /* PANTALLA 2: Ajustada para texto largo */
         #screen2 {
             opacity: 0;
             pointer-events: none;
             transform: scale(0.95);
+            /* CAMBIOS CLAVE PARA TEXTO LARGO: */
+            display: block; /* Dejamos de usar flex center */
+            overflow-y: auto; /* Permitimos scroll vertical en esta pantalla */
+            -webkit-overflow-scrolling: touch; /* Scroll suave en iPhone */
+            padding: 30px 0; /* Espacio arriba y abajo para que no se pegue */
         }
 
-        /* Clases de utilidad para transiciones */
-        .fade-out {
-            opacity: 0 !important;
-            pointer-events: none !important;
-            transform: scale(1.1) !important;
-        }
-        
-        .fade-in {
-            opacity: 1 !important;
-            pointer-events: auto !important;
-            transform: scale(1) !important;
-        }
+        .fade-out { opacity: 0 !important; pointer-events: none !important; transform: scale(1.1) !important; }
+        .fade-in { opacity: 1 !important; pointer-events: auto !important; transform: scale(1) !important; }
+        .hidden { opacity: 0 !important; pointer-events: none; animation: none !important; transition: opacity 0.5s ease; }
 
-        /* Ocultar elementos específicos (como el texto de instrucción) */
-        .hidden {
-            opacity: 0 !important;
-            pointer-events: none;
-            animation: none !important; /* Detener parpadeo */
-            transition: opacity 0.5s ease;
-        }
-
-        /* --- ELEMENTOS DE PANTALLA 1 --- */
+        /* --- ELEMENTOS PANTALLA 1 --- */
         .heart-container {
-            position: relative;
-            width: 75vmin; height: 75vmin;
-            max-width: 450px; max-height: 450px;
-            cursor: pointer;
+            position: relative; width: 75vmin; height: 75vmin;
+            max-width: 450px; max-height: 450px; cursor: pointer;
             animation: float 4s ease-in-out infinite;
         }
-        @keyframes float {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-15px) scale(1.02); }
-        }
-
+        @keyframes float { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-15px) scale(1.02); } }
         svg { width: 100%; height: 100%; overflow: visible; }
         path#heart-wire { fill: none; stroke: #222; stroke-width: 1px; stroke-linecap: round; }
-
-        .light {
-            position: absolute; width: 8px; height: 8px; border-radius: 50%;
-            transform: translate(-50%, -50%); background-color: #222;
-            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        .light.on {
-            width: 12px; height: 12px;
-            box-shadow: 0 0 10px currentColor, 0 0 30px currentColor, 0 0 60px currentColor;
-            animation: twinkle 2s infinite alternate;
-        }
-        @keyframes twinkle {
-            0% { opacity: 0.8; transform: translate(-50%, -50%) scale(0.9); }
-            100% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-        }
-
-        .content-wrap {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); text-align: center; width: 100%;
-            pointer-events: none; /* Dejar pasar clic al corazón */
-        }
-        
-        .click-hint {
-            font-size: 0.9rem; letter-spacing: 3px; text-transform: uppercase;
-            color: #888; margin-bottom: 20px; animation: pulseText 2s infinite;
-        }
+        .light { position: absolute; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); background-color: #222; transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        .light.on { width: 12px; height: 12px; box-shadow: 0 0 10px currentColor, 0 0 30px currentColor, 0 0 60px currentColor; animation: twinkle 2s infinite alternate; }
+        @keyframes twinkle { 0% { opacity: 0.8; transform: translate(-50%, -50%) scale(0.9); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } }
+        .content-wrap { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%; pointer-events: none; }
+        .click-hint { font-size: 0.9rem; letter-spacing: 3px; text-transform: uppercase; color: #888; margin-bottom: 20px; animation: pulseText 2s infinite; }
         @keyframes pulseText { 0%, 100% { opacity: 0.5;} 50% { opacity: 1;}}
-
-        .main-title {
-            font-family: 'Dancing Script', cursive; font-size: 3.5rem; margin: 0;
-            text-shadow: 0 4px 15px rgba(0,0,0,0.8);
-            opacity: 0; transform: translateY(30px); transition: all 1.2s ease-out;
-        }
-        .shimmer-text {
-            display: inline-block;
-            background: linear-gradient(to right, #fff 20%, #ffd700 40%, #fff 60%, #fff 100%);
-            background-size: 200% auto; color: #000;
-            background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            animation: shimmer 3s linear infinite;
-        }
+        .main-title { font-family: 'Dancing Script', cursive; font-size: 3.5rem; margin: 0; text-shadow: 0 4px 15px rgba(0,0,0,0.8); opacity: 0; transform: translateY(30px); transition: all 1.2s ease-out; }
+        .shimmer-text { display: inline-block; background: linear-gradient(to right, #fff 20%, #ffd700 40%, #fff 60%, #fff 100%); background-size: 200% auto; color: #000; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shimmer 3s linear infinite; }
         @keyframes shimmer { to { background-position: 200% center; } }
-        
-        .sub-msg {
-            font-size: 1rem; margin-top: 15px; opacity: 0; color: #ddd;
-            transform: translateY(30px); transition: all 1.2s ease-out 0.6s;
-        }
-
-        /* Botón NEXT */
-        .next-btn {
-            margin-top: 40px;
-            padding: 12px 30px;
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            border-radius: 30px;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 1rem;
-            cursor: pointer;
-            opacity: 0;
-            pointer-events: auto; /* IMPORTANTE: Habilitar clic */
-            transition: all 0.5s ease;
-            box-shadow: 0 0 10px rgba(255,255,255,0.1);
-        }
-        .next-btn:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: #fff;
-            box-shadow: 0 0 20px rgba(255,255,255,0.3);
-        }
+        .sub-msg { font-size: 1rem; margin-top: 15px; opacity: 0; color: #ddd; transform: translateY(30px); transition: all 1.2s ease-out 0.6s; }
+        .next-btn { margin-top: 40px; padding: 12px 30px; background: transparent; border: 1px solid rgba(255, 255, 255, 0.3); color: white; border-radius: 30px; font-family: 'Montserrat', sans-serif; font-size: 1rem; cursor: pointer; opacity: 0; pointer-events: auto; transition: all 0.5s ease; box-shadow: 0 0 10px rgba(255,255,255,0.1); }
+        .next-btn:hover { background: rgba(255,255,255,0.1); border-color: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.3); }
         .visible { opacity: 1 !important; transform: translateY(0) !important; }
 
-        /* --- ELEMENTOS DE PANTALLA 2 (CARTA) --- */
+        /* --- ELEMENTOS DE PANTALLA 2 (CARTA) MODIFICADOS --- */
         .letter-container {
-            width: 85%; max-width: 600px; max-height: 80vh;
+            width: 85%; max-width: 600px;
+            /* Quitamos max-height y overflow-y para que crezca con el texto */
+            margin: 0 auto; /* Centrado horizontal */
             background: rgba(20, 20, 20, 0.9);
             border: 2px solid #ffd700;
             border-radius: 15px; padding: 40px;
             text-align: center;
             box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
-            overflow-y: auto;
             position: relative;
         }
-        .corner-deco {
-            position: absolute; width: 40px; height: 40px;
-            border-top: 3px solid #ffd700; border-left: 3px solid #ffd700;
-            top: 15px; left: 15px;
-        }
-        .corner-deco.bottom {
-            top: auto; left: auto; bottom: 15px; right: 15px;
-            transform: rotate(180deg);
-        }
-        .letter-title {
-            font-family: 'Dancing Script', cursive; font-size: 2.5rem; color: #ffd700; margin-bottom: 20px;
-        }
-        .letter-body {
-            font-size: 1.1rem; line-height: 1.8; color: #e0e0e0; white-space: pre-wrap;
-        }
+        .corner-deco { position: absolute; width: 40px; height: 40px; border-top: 3px solid #ffd700; border-left: 3px solid #ffd700; top: 15px; left: 15px; }
+        .corner-deco.bottom { top: auto; left: auto; bottom: 15px; right: 15px; transform: rotate(180deg); }
+        .letter-title { font-family: 'Dancing Script', cursive; font-size: 2.5rem; color: #ffd700; margin-bottom: 20px; }
+        .letter-body { font-size: 1.1rem; line-height: 1.8; color: #e0e0e0; white-space: pre-wrap; }
 
         @media (max-width: 600px) {
             .main-title { font-size: 2.8rem; }
@@ -202,16 +123,10 @@
                 <path id="heart-wire" d="M50 90 Q100 45 100 25 A25 25 0 0 0 50 25 A25 25 0 0 0 0 25 Q0 45 50 90" />
             </svg>
         </div>
-
         <div class="content-wrap">
             <div id="introText" class="click-hint">Toca para encender la magia</div>
-            
             <h1 id="nameTitle" class="main-title">¡Feliz Cumpleaños<br><span class="shimmer-text">Carolina!</span></h1>
-            <p id="romanceText" class="sub-msg">
-                La distancia solo nos impide tocarnos,<br>pero no sentirnos.<br>
-                Te quiero ❤️
-            </p>
-            
+            <p id="romanceText" class="sub-msg">La distancia solo nos impide tocarnos,<br>pero no sentirnos.<br>Te quiero ❤️</p>
             <button id="nextBtn" class="next-btn">Leer Carta Especial &rarr;</button>
         </div>
     </div>
@@ -220,9 +135,7 @@
         <div class="letter-container">
             <div class="corner-deco"></div>
             <div class="corner-deco bottom"></div>
-            
             <h2 class="letter-title">Para ti, Carolina...</h2>
-            
             <div class="letter-body">
 Martha Carolina Moreno Prado,
                 
@@ -240,128 +153,65 @@ Que hoy, aunque no te encante la fecha, sepas que hay alguien que te piensa boni
 
 Feliz cumpleaños, Carolina.
 Con amor y cariño✨ 
-Pedro Jiménez.
-                
+Pedro Jiménez
 </div>
         </div>
     </div>
 
     <script>
-        const totalLights = 55;
-        const container = document.getElementById('heartContainer');
-        const wire = document.getElementById('heart-wire');
-        const colors = ['#ff0055', '#ffdd00', '#00ffaa', '#0099ff', '#ff33aa'];
-        const bgMusic = document.getElementById('bgMusic');
-        
-        const introText = document.getElementById('introText');
-        const nameTitle = document.getElementById('nameTitle');
-        const romanceText = document.getElementById('romanceText');
-        const nextBtn = document.getElementById('nextBtn');
-        
-        const screen1 = document.getElementById('screen1');
-        const screen2 = document.getElementById('screen2');
-
+        const totalLights = 55; const container = document.getElementById('heartContainer'); const wire = document.getElementById('heart-wire');
+        const colors = ['#ff0055', '#ffdd00', '#00ffaa', '#0099ff', '#ff33aa']; const bgMusic = document.getElementById('bgMusic');
+        const introText = document.getElementById('introText'); const nameTitle = document.getElementById('nameTitle');
+        const romanceText = document.getElementById('romanceText'); const nextBtn = document.getElementById('nextBtn');
+        const screen1 = document.getElementById('screen1'); const screen2 = document.getElementById('screen2');
         let isOn = false;
-
-        // Crear luces
         function createLights() {
             const pathLength = wire.getTotalLength();
             for (let i = 0; i < totalLights; i++) {
-                const bulb = document.createElement('div');
-                bulb.classList.add('light');
+                const bulb = document.createElement('div'); bulb.classList.add('light');
                 bulb.style.color = colors[Math.floor(Math.random() * colors.length)];
-                const distance = (pathLength / totalLights) * i; 
-                const point = wire.getPointAtLength(distance);
-                bulb.style.left = point.x + '%';
-                bulb.style.top = point.y + '%';
-                bulb.style.transitionDelay = (i * 0.02) + 's';
-                bulb.style.animationDelay = (Math.random() * 2) + 's';
+                const distance = (pathLength / totalLights) * i; const point = wire.getPointAtLength(distance);
+                bulb.style.left = point.x + '%'; bulb.style.top = point.y + '%';
+                bulb.style.transitionDelay = (i * 0.02) + 's'; bulb.style.animationDelay = (Math.random() * 2) + 's';
                 container.appendChild(bulb);
             }
         }
         createLights();
-
-        // --- INTERACCIÓN 1: TOCAR CORAZÓN ---
         container.addEventListener('click', () => {
-            if (isOn) return;
-            isOn = true;
-
-            // Audio
-            bgMusic.volume = 0.5;
-            bgMusic.play().catch(e => console.log("Audio play error"));
-
-            // 1. AQUÍ ESTÁ LA MAGIA: OCULTAR TEXTO INICIAL
+            if (isOn) return; isOn = true;
+            bgMusic.volume = 0.5; bgMusic.play().catch(e => console.log("Audio play error"));
             introText.classList.add('hidden');
-
-            // Encender luces
             const lights = document.querySelectorAll('.light');
-            lights.forEach(l => {
-                l.classList.add('on');
-                l.style.backgroundColor = l.style.color; 
-            });
-
-            // Mostrar mensaje cumple
-            nameTitle.classList.add('visible');
-            romanceText.classList.add('visible');
-            fireConfetti();
-
-            // Mostrar botón 'Siguiente' tras 4 segundos
-            setTimeout(() => {
-                nextBtn.classList.add('visible');
-            }, 4000);
+            lights.forEach(l => { l.classList.add('on'); l.style.backgroundColor = l.style.color; });
+            nameTitle.classList.add('visible'); romanceText.classList.add('visible'); fireConfetti();
+            setTimeout(() => { nextBtn.classList.add('visible'); }, 4000);
         });
-
-        // --- INTERACCIÓN 2: IR A CARTA ---
         nextBtn.addEventListener('click', () => {
-            // FADE OUT de la pantalla 1 (Se va todo el texto de cumple)
             screen1.classList.add('fade-out');
-            
-            // FADE IN de la pantalla 2 (Aparece la carta)
-            setTimeout(() => {
-                screen2.classList.add('fade-in');
-                fireConfetti(); // Más confeti para celebrar
-            }, 800);
+            setTimeout(() => { screen2.classList.add('fade-in'); fireConfetti(); }, 800);
         });
-
-        // Lógica Confeti
         function fireConfetti() {
-            const canvas = document.getElementById('confetti-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            const pieces = [];
-            const numberOfPieces = 200;
+            const canvas = document.getElementById('confetti-canvas'); const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            const pieces = []; const numberOfPieces = 200;
             const partyColors = ['#ff0055', '#ffdd00', '#00ffaa', '#0099ff', '#ffffff', '#ffcc00'];
-
             function update() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 pieces.forEach((p, index) => {
                     p.y += p.gravity; p.rotation += p.rotationSpeed;
                     ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rotation);
-                    ctx.fillStyle = p.color;
-                    ctx.shadowBlur = 5; ctx.shadowColor = p.color;
-                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-                    ctx.restore();
+                    ctx.fillStyle = p.color; ctx.shadowBlur = 5; ctx.shadowColor = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size); ctx.restore();
                     if (p.y > canvas.height) pieces.splice(index, 1);
                 });
                 if (pieces.length > 0) requestAnimationFrame(update);
             }
-
             for (let i = 0; i < numberOfPieces; i++) {
-                pieces.push({
-                    x: Math.random() * canvas.width, y: Math.random() * -200,
-                    size: Math.random() * 8 + 4, gravity: Math.random() * 3 + 2,
-                    rotation: Math.random() * 360, rotationSpeed: (Math.random() - 0.5) * 0.3,
-                    color: partyColors[Math.floor(Math.random() * partyColors.length)]
-                });
+                pieces.push({ x: Math.random() * canvas.width, y: Math.random() * -200, size: Math.random() * 8 + 4, gravity: Math.random() * 3 + 2, rotation: Math.random() * 360, rotationSpeed: (Math.random() - 0.5) * 0.3, color: partyColors[Math.floor(Math.random() * partyColors.length)] });
             }
             update();
         }
-        window.addEventListener('resize', () => {
-            const canvas = document.getElementById('confetti-canvas');
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        });
+        window.addEventListener('resize', () => { const canvas = document.getElementById('confetti-canvas'); canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
     </script>
 </body>
-
 </html>
